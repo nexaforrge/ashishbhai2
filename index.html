@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html>
 	<head>
@@ -53,7 +52,7 @@
 		<div class="card">
 			<div class="avatar-wrap"><div class="avatar"></div></div>
 			<h1>ASHISH BHAI 2</h1>
-			
+
 			<a class="cta" href="#" id="joinBtn">
 				<svg viewBox="0 0 24 24"><path d="M21.94 4.63c.27-1.13-.87-2.03-1.9-1.57L2.72 10.6c-1.1.49-1.09 2.06.02 2.53l4.5 1.9 1.7 5.48c.24.77 1.22 1 1.8.42l2.53-2.5 4.6 3.4c.83.62 2.02.18 2.25-.83L21.94 4.63zM8.8 13.7l9.4-6.34c.28-.19.58.17.34.4l-7.9 7.4c-.28.26-.46.61-.5.99l-.24 2.16-1.1-4.61z"/></svg>
 				Join on Telegram
@@ -71,17 +70,31 @@
 			function _cookie(n){var m=document.cookie.match('(^|;)\\s*'+n+'\\s*=\\s*([^;]+)');return m?m.pop():''}
 			var _p=new URLSearchParams(window.location.search);
 			var _fc=_p.get('fbclid')||'',_cm=_p.get('utm_campaign')||'',_ad=_p.get('utm_content')||_p.get('utm_ad')||'';
+
 			function _pv(){
 				var _e=_g();
 				try{fbq('track','PageView',{},{eventID:_e})}catch(x){}
 				var _fp=_cookie('_fbp');
-				var _url=_b+'/event?type=PageView&site='+_s+'&vid='+_v+'&eid='+_e+
-					'&fbclid='+encodeURIComponent(_fc)+'&campaign='+encodeURIComponent(_cm)+
+				// Capture the real _fbc cookie set by Meta's pixel, instead of
+				// reconstructing it later server-side with the wrong timestamp.
+				var _fbcCookie=_cookie('_fbc');
+				var _fbcFinal=_fbcCookie;
+				if(!_fbcFinal && _fc){
+					// fallback only used once, at actual landing time (not later
+					// at Subscribe time) if the pixel hasn't set the cookie yet
+					_fbcFinal='fb.1.'+Date.now()+'.'+_fc;
+				}
+				var _url=_b+'/event?type=PageView&site='+_s+'&vid='+encodeURIComponent(_v)+'&eid='+encodeURIComponent(_e)+
+					'&fbclid='+encodeURIComponent(_fc)+'&fbc='+encodeURIComponent(_fbcFinal)+
+					'&campaign='+encodeURIComponent(_cm)+
 					'&ad='+encodeURIComponent(_ad)+'&fbp='+encodeURIComponent(_fp);
 				if(navigator.sendBeacon){navigator.sendBeacon(_url,new Blob([],{type:'text/plain'}))}
 				else{fetch(_url,{method:'POST',keepalive:true}).catch(function(){})}
 			}
-			_pv();
+			// Small delay so Meta's pixel script has a chance to set _fbc itself
+			// before we read cookies - reduces reliance on the fallback above.
+			setTimeout(_pv, 150);
+
 			var _end=Date.now()+30*1000;
 			function _tk(){
 				var _d=Math.max(0,Math.floor((_end-Date.now())/1000));
@@ -93,7 +106,7 @@
 			function _fl(){
 				var _st=document.getElementById('statusText');
 				if(_st)_st.textContent='Preparing your invite...';
-				fetch(_b+'/get-link?site='+_s+'&vid='+_v)
+				fetch(_b+'/get-link?site='+_s+'&vid='+encodeURIComponent(_v))
 					.then(function(r){return r.json()})
 					.then(function(d){
 						if(d.link){_cl=d.link;var _bt=document.getElementById('joinBtn');if(_bt)_bt.href=_cl;if(_st)_st.textContent=''}
